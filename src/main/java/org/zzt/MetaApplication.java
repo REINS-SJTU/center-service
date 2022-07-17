@@ -1,0 +1,15 @@
+package org.zzt;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@MapperScan("org.zzt.mapper")
+@SpringBootApplication
+public class MetaApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MetaApplication.class, args);
+    }
+}
