@@ -30,12 +30,12 @@ public class MaterializedViewController {
     @PostMapping("/create")
     public String create(@RequestBody Map<String, Object> data) {
         log.info(data.toString());
-        JSONObject s = JSONObject.parseObject("123");
+//        JSONObject s = JSONObject.parseObject(data.toString());
         String viewName = (String) data.get("viewName");
         String createSql = (String) data.get("createSql");
         String columnTypes = (String) data.get("columnTypes");
         if (viewName == null || createSql == null || columnTypes == null) {
-            return "fail.request body error.";
+            return "fail. request body error.";
         }
         Boolean status = metadataService.createMaterializedView(viewName, createSql, columnTypes);
         return status? "success":"fail";
@@ -47,5 +47,15 @@ public class MaterializedViewController {
         JSONObject ret = metadataService.loadMV(viewName);
         log.info(ret.toString());
         return ret;
+    }
+
+    @GetMapping("/loadAllMV")
+    public JSONObject loadAll() {
+        return metadataService.loadAll();
+    }
+
+    @GetMapping("loadAllMetadata")
+    public List<Metadata> loadAllMetadata() {
+        return metadataService.getAll();
     }
 }

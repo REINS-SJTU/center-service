@@ -1,6 +1,7 @@
 package org.zzt.service;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -10,6 +11,7 @@ import org.zzt.entity.Metadata;
 import org.zzt.mapper.MetadataMapper;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MetadataServiceImpl implements MetadataService{
@@ -43,6 +45,14 @@ public class MetadataServiceImpl implements MetadataService{
             return (JSONObject) JSONObject.parse(JSON.toJSONString(ret));
         }
 
+    }
+
+    @Override
+    public JSONObject loadAll() {
+        List<String> names = getAll().stream().map(Metadata::getName).collect(Collectors.toList());
+        return new JSONObject(){{
+            put("data", JSONArray.parseArray(JSON.toJSONString(names)));
+        }};
     }
 
     @Override

@@ -17,6 +17,21 @@ public class Template {
         put(11, temp11);
         put(12, temp12);
     }};
+    public static Map<Integer, String> index2MV = new HashMap<Integer, String>(){{
+        put(1, "mv1");
+        put(2, "mv2");
+        put(3, "mv3");
+        put(4, "mv4");
+        put(5, "mv5");
+        put(6, "mv6");
+        put(7, "mv9");
+        put(8, "mv10");
+        put(9, "mv13");
+        put(10, "mv16");
+        put(11, "mv17");
+        put(12, "mv18");
+    }};
+
     public static String temp1 = // query 1
             "select L_RETURNFLAG, L_LINESTATUS, " +
             "       sum(L_QUANTITY) as qty, " +
@@ -26,7 +41,7 @@ public class Template {
             "where L_LINESTATUS <> '%s' " +
             "group by L_RETURNFLAG, L_LINESTATUS";
     public static String temp2 = // query 2
-            "select S_ACCTBAL, S_NAME, N_NAME, P_PARTKEY, P_MFGR, S_ADDRESS, S_PHONE, S_COMMENT, R_NAME, PS_SUPPLYCOST " +
+            "select S_ACCTBAL, S_NAME, N_NAME, P_PARTKEY, P_MFGR, S_ADDRESS, S_PHONE, S_COMMENT, R_NAME, PS_SUPPLYCOST, P_SIZE, P_TYPE " +
             "from PART, SUPPLIER, PARTSUPP, NATION, REGION " +
             "where P_PARTKEY = PS_PARTKEY " +
             "      and S_SUPPKEY = PS_SUPPKEY " +
@@ -34,8 +49,8 @@ public class Template {
             "      and N_REGIONKEY = R_REGIONKEY " +
             "      and R_NAME = '%s' " +
             "      and PS_SUPPLYCOST < '%s' " +
-            "      and p_size = '%s' " +
-            "      and p_type like '%%%s'";
+            "      and P_SIZE = '%s' " +
+            "      and P_TYPE like '%%%s%%'";
     public static String temp3 = // query 3
             "select  L_ORDERKEY, sum(L_EXTENDEDPRICE * (1 - L_DISCOUNT)) as revenue, O_ORDERDATE, O_SHIPPRIORITY " +
             "from CUSTOMER, ORDERS, LINEITEM " +
@@ -98,7 +113,7 @@ public class Template {
             "where P_PARTKEY = PS_PARTKEY " +
             "      and P_BRAND <> '%s' " +
             "      and P_SIZE = '%s' " +
-            "      and p_type not like '%s%%' " +
+            "      and P_TYPE not like '%s%%' " +
             "group by P_BRAND, P_TYPE, P_SIZE";
     public static String temp11 = // query 17
             "select P_BRAND, P_CONTAINER, sum(L_EXTENDEDPRICE / 7.0) as avg_year " +
