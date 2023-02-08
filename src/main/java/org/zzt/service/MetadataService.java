@@ -10,6 +10,7 @@ import java.util.List;
 public interface MetadataService {
     public Boolean createMaterializedView(String viewName, String createSql, String types);
     public JSONObject loadMV(String viewName);
-    JSONObject loadAll();
-    public List<Metadata> getAll();
+    public Boolean isExpire(String viewName);
+    JSONObject loadAllName();
+    public List<Metadata> loadAllMeta();
 }

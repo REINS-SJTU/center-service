@@ -1,13 +1,13 @@
 package org.zzt.controller;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.zzt.entity.Metadata;
-import org.zzt.mapper.MetadataMapper;
 import org.zzt.service.MetadataService;
+import org.zzt.service.SparkService;
 
 import java.util.List;
 import java.util.Map;
@@ -16,14 +16,16 @@ import java.util.Map;
 @RestController
 public class MaterializedViewController {
     MetadataService metadataService;
+    SparkService sparkService;
     @Autowired
-    public MaterializedViewController(MetadataService metadataService) {
+    public MaterializedViewController(MetadataService metadataService, SparkService sparkService) {
         this.metadataService = metadataService;
+        this.sparkService = sparkService;
     }
 
     @GetMapping("/getAll")
     public String getAllMaterializedViews() {
-        List<Metadata> data = metadataService.getAll();
+        List<Metadata> data = metadataService.loadAllMeta();
         return data.toString();
     }
 
@@ -43,7 +45,7 @@ public class MaterializedViewController {
 
     @GetMapping("/loadMV")
     public JSONObject loadMV(@RequestParam String viewName) {
-        log.info(viewName);
+        log.info("load mv:{}", viewName);
         JSONObject ret = metadataService.loadMV(viewName);
         log.info(ret.toString());
         return ret;
@@ -51,11 +53,24 @@ public class MaterializedViewController {
 
     @GetMapping("/loadAllMV")
     public JSONObject loadAll() {
-        return metadataService.loadAll();
+        return metadataService.loadAllName();
     }
 
     @GetMapping("loadAllMetadata")
     public List<Metadata> loadAllMetadata() {
-        return metadataService.getAll();
+        return metadataService.loadAllMeta();
+    }
+
+    @GetMapping("/spark")
+    public void spark() {
+        String sql =
+        " select S_ACCTBAL, S_NAME, N_NAME, P_PARTKEY, P_MFGR, S_ADDRESS, S_PHONE, S_COMMENT, R_NAME, PS_SUPPLYCOST, P_SIZE, P_TYPE " +
+                "from PART, SUPPLIER, PARTSUPP, NATION, REGION " +
+                "where P_PARTKEY = PS_PARTKEY " +
+                "and S_SUPPKEY = PS_SUPPKEY " +
+                "and S_NATIONKEY = N_NATIONKEY " +
+                "and N_REGIONKEY = R_REGIONKEY";
+        LogicalPlan lp = sparkService.optimize(sql);
+        System.out.println(1);
     }
 }

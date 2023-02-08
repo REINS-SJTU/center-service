@@ -8,7 +8,7 @@ echo "arg:" $enableRewrite
 echo "arg:" $mvName
 echo "arg:" $sql
 
-SPARK_SUBMIT=/Users/zzt/deploy/spark-3.1-bin-test/bin/spark-submit
+SPARK_SUBMIT=/Users/zzt/deploy/spark-3.1-bin-test6/bin/spark-submit
 JAR=/Users/zzt/code/spark-to-delta/target/spark-to-delta-1.0-SNAPSHOT.jar
 CLASS=com.reins.SparkTpchSQL
 
@@ -17,10 +17,10 @@ $SPARK_SUBMIT \
 --class $CLASS \
 --master spark://localhost:7077 \
 --deploy-mode cluster \
---executor-memory 1G \
---total-executor-cores 1 \
---driver-memory 1G \
---driver-cores 1 \
+--executor-memory 4G \
+--total-executor-cores 4 \
+--driver-memory 4G \
+--driver-cores 4 \
 $JAR \
 $index \
 $enableRewrite \
