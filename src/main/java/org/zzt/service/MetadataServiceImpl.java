@@ -80,6 +80,18 @@ public class MetadataServiceImpl implements MetadataService{
     }
 
     @Override
+    public Long ExpireTime(String viewName) {
+        LambdaQueryWrapper<Metadata> queryWrapper = new LambdaQueryWrapper<Metadata>()
+                .eq(Metadata::getName, viewName);
+        Metadata ret = metadataMapper.selectOne(queryWrapper);
+        if (ret != null) {
+            long time = System.currentTimeMillis() - ret.getCreateTime() - ret.getTtl();
+            return time >= 0L ? time:0L;
+        }
+        return 0L;
+    }
+
+    @Override
     public JSONObject loadAllName() {
         List<String> names = loadAllMeta().stream().map(Metadata::getName).collect(Collectors.toList());
         return new JSONObject(){{

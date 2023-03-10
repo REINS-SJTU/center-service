@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.zzt.workload.task.Template;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 
 @Service
@@ -18,11 +16,11 @@ public class SubmitService {
     MetadataService metadataService;
     private final Template template = new Template();
     private final List<String> window = new ArrayList<>();
+    private final Map<String, Integer> windowCount = new HashMap();
     private final Integer windowSize = 5;
     private Long taskGap = 20 * 1000L;
     private final Random random = new Random();
-    private Integer counter = 0;
-    private final Integer maxCounter = 40;
+    private static String metricsFile = "/Users/zzt/deploy/spark-3.1-bin-test6/metrics/worker.coresUsed.csv";
 //    private Map<String, Integer> preCompute = new HashMap<>();
     public void run() throws Exception {
         BufferedReader bufferedReader = new BufferedReader(new FileReader("static_workload"));
@@ -37,47 +35,92 @@ public class SubmitService {
             Thread.sleep(taskGap);
             if (window.size() < windowSize) {
                 window.add(mvName);
+                windowCount.put(mvName, windowCount.getOrDefault(mvName, 0) + 1);
             } else {
                 // full trigger predict
-                window.remove(0);
-                window.add(mvName);
-                String next = predict();
-                // run pre compute task
-                System.out.println(next);
-                String sql = template.mvNameToSql.get(next);
-                if (sql != null) {
-                    String[] preCompute = new String[]{"./test.sh", "pre_compute", "true", next, template.mvNameToSql.get(next)};
-                    if (metadataService.isExpire(next)) {
-                        System.out.println(next + " is expire.");
-                        if (random.nextDouble() < 0.33) {
-//                            submit(preCompute);
-                        }
-                    } else {
-                        // refresh light task
-                        if (!isHeavyTask(next) && random.nextDouble() < 0.1) {
-//                            submit(preCompute);
-                        }
-//                        counter++;
-//                        if (counter >= maxCounter && !isHeavyTask(next)) {
-//                            // force update
-//                            submit(preCompute);
-//                            counter = 0;
-//                        }
-                    }
-                } else {
-                    System.out.println(next + " has empty sql.");
-                }
-            }
-//             send to kafka
-//            kafka.send("test", mvName);
-            // predict
+                String toRemove = window.get(0);
+                window.remove(toRemove);
+                windowCount.remove(toRemove);
 
+                window.add(mvName);
+                windowCount.put(mvName, windowCount.getOrDefault(mvName, 0) + 1);
+//                String next = predict();
+                // run pre compute task
+//                System.out.println(next);
+                if (!isResourceBusy(metricsFile)) {
+                    String next = scheduleTask();
+                    String sql = template.mvNameToSql.get(next);
+                    String[] preCompute = new String[]{"./test.sh", "pre_compute", "true", next, sql};
+                    submit(preCompute);
+                }
+
+//                if (sql != null) {
+//                    String[] preCompute = new String[]{"./test.sh", "pre_compute", "true", next, template.mvNameToSql.get(next)};
+//                    if (metadataService.isExpire(next)) {
+//                        System.out.println(next + " is expire.");
+//                        if (random.nextDouble() < 0.33) {
+////                            submit(preCompute);
+//                        }
+//                    } else {
+//                        // refresh light task
+//                        if (!isResourceBusy(next) && random.nextDouble() < 0.1) {
+////                            submit(preCompute);
+//                        }
+////                        counter++;
+////                        if (counter >= maxCounter && !isHeavyTask(next)) {
+////                            // force update
+////                            submit(preCompute);
+////                            counter = 0;
+////                        }
+//                    }
+//                } else {
+//                    System.out.println(next + " has empty sql.");
+//                }
+            }
         }
+    }
+
+    private static Boolean isResourceBusy(String fileName) throws Exception {
+        RandomAccessFile rf = new RandomAccessFile(fileName, "r");
+        long len = rf.length();
+        long start = rf.getFilePointer();
+        long nextEnd = start + len - 2;
+        String line = null;
+        rf.seek(nextEnd);
+        int c = -1;
+        while (nextEnd > start) {
+            c = rf.read();
+            if (c == '\n' || c == 'r') {
+                line = rf.readLine();
+                String[] items = line.split(",");
+                return (Double.parseDouble(items[1]) / 8.0) > 0.5;
+            }
+            nextEnd--;
+            rf.seek(nextEnd);
+        }
+        // 100%
+        return true;
     }
 
     private Boolean isHeavyTask(String viewName) {
         List<String> name = Arrays.asList("mv3", "mv5", "mv9", "mv10", "mv17");
         return name.contains(viewName);
+    }
+
+    private String scheduleTask() {
+        Map<String, Double> score = new HashMap<>();
+        windowCount.forEach((k, v) -> {
+            score.put(k, v.doubleValue() * Template.mvPriority.get(k) * 1000 + metadataService.ExpireTime(k)); // ms
+        });
+        String maxName = null;
+        Double maxV = 0.0;
+        for (Map.Entry<String, Double> e: score.entrySet()) {
+            if (e.getValue() > maxV) {
+                maxName = e.getKey();
+                maxV = e.getValue();
+            }
+        }
+        return maxName;
     }
 
     private String predict() throws Exception {
@@ -126,5 +169,9 @@ public class SubmitService {
         // collect data for predicting the next 10 sql template
         // then choose the most time-consuming sql from memory(listen from kafka)
         // remove the 'expire' in spark engine
+    }
+
+    public static void main(String[] args) throws Exception {
+        isResourceBusy(metricsFile);
     }
 }

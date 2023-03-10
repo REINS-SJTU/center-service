@@ -194,7 +194,13 @@ public class Index {
                 String table2 = primaryKey2Table.get(key2);
                 ret.get(table2).add(foreignKey2Table.get(key1));
             } else {
-                log.error("invalid primary key:{}, {}", key1, key2);
+                if (primaryKeyset.contains(key1) && primaryKeyset.contains(key2)) {
+                    String table1 = primaryKey2Table.get(key1), table2 = primaryKey2Table.get(key2);
+                    ret.get(table1).add(table2);
+                } else {
+                    log.error("invalid primary key:{}, {}", key1, key2);
+                }
+
             }
         });
         return ret;

@@ -11,6 +11,7 @@ public interface MetadataService {
     public Boolean createMaterializedView(String viewName, String createSql, String types);
     public JSONObject loadMV(String viewName);
     public Boolean isExpire(String viewName);
+    public Long ExpireTime(String viewName);
     JSONObject loadAllName();
     public List<Metadata> loadAllMeta();
 }

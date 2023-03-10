@@ -73,6 +73,20 @@ public class Template {
         put("mv17", mv11);
         put("mv18", mv12);
     }};
+    public static Map<String, Double> mvPriority = new HashMap<String, Double>() {{
+        put("mv1", 2.5);
+        put("mv2", 2.0);
+        put("mv3", 2.8);
+        put("mv4", 1.8);
+        put("mv5", 5.1);
+        put("mv6", 1.7);
+        put("mv9", 6.3);
+        put("mv10", 5.9);
+        put("mv13", 2.7);
+        put("mv16", 2.5);
+        put("mv17", 3.4);
+        put("mv18", 3.0);
+    }};
     public Map<String, String> mvSqlToName = new HashMap<String, String>() {{
         put(mv1, "mv1");
         put(mv2, "mv2");

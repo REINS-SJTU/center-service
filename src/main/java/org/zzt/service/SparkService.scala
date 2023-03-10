@@ -43,7 +43,7 @@ class SparkService (metadataService: MetadataService) {
                 val sql = f.createSql
                 println("sql:" + sql)
                 val tableInfo = getTableInfo(sql)
-                tableInfo.name = f.getName
+                tableInfo.name = f.name
                 ret.add(tableInfo)
 //                val lp = optimize(sql)
 //                val output: Seq[String] = lp.output.map{f => f.name}
